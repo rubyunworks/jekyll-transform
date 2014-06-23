@@ -3,6 +3,13 @@ module Jekyll
   class TransformPage < Page
     #alias read_yaml_front_matter read_yaml 
 
+    # Get transform configuration.
+    #
+    # Returns hash.
+    def transfiguration
+      site.config['transform'] || {}
+    end
+
     # Read the YAML frontmatter.
     #
     # base - The String path to the dir containing the file.
@@ -12,9 +19,14 @@ module Jekyll
     def read_yaml(base, name)
       begin
         text = File.read(File.join(base, name))
-        data = (site.config['transform'] || {})['page_yaml'] || {'layout'=>'default'}
+        data = {'layout'=>'default'}
 
-        if text =~ /<!--\s+---\s*\n(.*?)^-->\s*$\n?/m
+        if page_yaml = transfiguration['page_yaml']
+          data.merge!(page_yaml)
+        end
+
+        # commented metadata
+        if text =~ /<!--\s+---\s*(.*?)-->\s*$\n?/m
           text.delete($0)
           data.merge!(YAML.safe_load($1))
         end
@@ -45,9 +57,14 @@ module Jekyll
     def read_yaml(base, name)
       begin
         text = File.read(File.join(base, name))
-        data = (site.config['transform'] || {})['post_yaml'] || {'layout'=>'post'}
+        data = {'layout'=>'post'}
 
-        if text =~ /<!--\s+---\s*\n(.*?)^-->\s*$\n?/m
+        if post_yaml = transfiguration['post_yaml']
+          data.merge!(post_yaml)
+        end
+
+        # commented metadata
+        if text =~ /<!--\s+---\s*(.*?)-->\s*$\n?/m
           text.delete($0)
           data.merge!(YAML.safe_load($1))
         end
